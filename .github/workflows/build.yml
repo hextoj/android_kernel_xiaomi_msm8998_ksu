@@ -1,21 +1,17 @@
 name: Build Android Kernel
 
 on:
-  workflow_dispatch:  # 允许手动触发构建
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-20.04
 
     steps:
-    # 1. 检出源码
     - name: Checkout Source Code
       uses: actions/checkout@v3
-      with:
-        submodules: true  # 如果项目有子模块，请启用
 
-    # 2. 安装依赖工具
-    - name: Setup Build Environment
+    - name: Install Build Dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y \
@@ -25,35 +21,41 @@ jobs:
           libssl-dev \
           make \
           gcc \
+          g++ \
           clang \
           ccache \
           wget \
           unzip \
-          build-essential
+          build-essential \
+          libelf-dev \
+          zlib1g-dev
 
-    - name: Install Clang from System
+    - name: Download Clang Toolchain
       run: |
-        sudo apt-get update
-        sudo apt-get install -y clang
-        export PATH=/usr/bin:$PATH
+        mkdir -p ~/toolchain
+        cd ~/toolchain
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/master.tar.gz
+        tar -xvf master.tar.gz
+        export PATH=$PWD/bin:$PATH
 
-    # 4. 编译内核
     - name: Build Kernel
       env:
         ARCH: arm64
         SUBARCH: arm64
-        CROSS_COMPILE: aarch64-linux-gnu-
+        CLANG_TRIPLE: aarch64-linux-gnu-
+        CROSS_COMPILE: $HOME/toolchain/bin/aarch64-linux-android-
+        CROSS_COMPILE_ARM32: $HOME/toolchain/bin/arm-linux-androideabi-
+        PATH: $HOME/toolchain/bin:$PATH
       run: |
         mkdir -p out
-        make O=out ARCH=arm64 chiron_defconfig  # MIX2 defconfig
+        make O=out ARCH=arm64 chiron_defconfig
         make -j$(nproc) O=out ARCH=arm64 \
           CC=clang \
-          CROSS_COMPILE=aarch64-linux-android- \
-          CROSS_COMPILE_ARM32=arm-linux-androideabi-
+          CROSS_COMPILE=$CROSS_COMPILE \
+          CROSS_COMPILE_ARM32=$CROSS_COMPILE_ARM32
 
-    # 5. 上传编译结果
     - name: Upload Kernel Image
       uses: actions/upload-artifact@v3
       with:
         name: kernel-image
-        path: out/arch/arm64/boot/Image.gz-dtb  # 替换为你的内核输出路径
+        path: out/arch/arm64/boot/Image.gz-dtb

@@ -31,15 +31,11 @@ jobs:
           unzip \
           build-essential
 
-    # 3. 下载 Clang 工具链
-    - name: Download Clang Toolchain
+    - name: Install Clang from System
       run: |
-        mkdir -p ~/toolchain
-        cd ~/toolchain
-        wget https://storage.googleapis.com/android-kernel-build-tools/clang-r450784d.tar.gz
-        tar -xvf clang-r450784d.tar.gz
-        export PATH=$PWD/clang/bin:$PATH
-
+        sudo apt-get update
+        sudo apt-get install -y clang
+        export PATH=/usr/bin:$PATH
 
     # 4. 编译内核
     - name: Build Kernel

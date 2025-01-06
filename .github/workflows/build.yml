@@ -36,9 +36,10 @@ jobs:
       run: |
         mkdir -p ~/toolchain
         cd ~/toolchain
-        wget https://github.com/android/ndk/releases/download/clang-r450784d/clang-r450784d-linux.zip
-        unzip clang-r450784d-linux.zip
+        wget https://storage.googleapis.com/android-kernel-build-tools/clang-r450784d.tar.gz
+        tar -xvf clang-r450784d.tar.gz
         export PATH=$PWD/clang/bin:$PATH
+
 
     # 4. 编译内核
     - name: Build Kernel

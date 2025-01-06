@@ -43,7 +43,7 @@ jobs:
         ARCH: arm64
         SUBARCH: arm64
         CROSS_COMPILE: aarch64-linux-gnu-
-        PATH: $HOME/toolchain/clang/bin:$PATH
+        PATH: /usr/bin/clang/bin:$PATH
       run: |
         mkdir -p out
         make O=out ARCH=arm64 chiron_defconfig  # MIX2 defconfig
